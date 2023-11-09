@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const app = express();
 require('dotenv').config()
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const port = process.env.PORT || 5000;
 
 // middleware //
@@ -39,12 +39,49 @@ async function run() {
       res.send(result);
     });
 
+    app.get('/jobs/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) }
+      const result = await jobsCollection.findOne(query);
+      res.send(result);
+    })
+
     app.post('/jobs', async (req, res) => {
       const newJob = req.body;
       console.log(newJob);
       const result = await jobsCollection.insertOne(newJob);
       res.send(result);
     });
+
+    app.put('/jobs/:id', async (req, res) => {
+      const id = req.params.id;
+      const updateJobs = req.body;
+      const filter = { _id: new ObjectId(id) };
+      const option = { upsert: true };
+
+      const job = {
+        $set: {
+          email: updateJobs.email,
+          job_title: updateJobs.job_title,
+          category: updateJobs.category,
+          deadline: updateJobs.deadline,
+          description: updateJobs.description,
+          minimum_price: updateJobs.minimum_price,
+          maximum_price: updateJobs.maximum_price
+        }
+      }
+      const result = await jobsCollection.updateOne(filter, job, option);
+      res.send(result);
+    });
+
+
+
+    app.delete('/jobs/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) }
+      const result = await jobsCollection.deleteOne(query);
+      res.send(result);
+    })
 
 
 
